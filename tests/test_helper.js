@@ -15,11 +15,19 @@ const initialBlogs = [
   }
 ]
 
+const nonExistingId = async () => {
+  const blog = new Blog({ title: 'willremovethissoon', author: 'Jaakko Kulta', url: 'https://www.hopea.com/first-blog', likes: 8 })
+  await blog.save()
+  await Blog.deleteOne({ _id: blog._id })
+
+  return blog._id.toString()
+}
+
 const notesInDb = async () => {
   const blogs = await Blog.find({})
   return blogs.map(blog => blog.toJSON())
 }
 
 module.exports = {
-  initialBlogs, notesInDb
+  initialBlogs, notesInDb, nonExistingId
 }

@@ -72,6 +72,21 @@ describe('working with initial blogs', () => {
     const blogsAfter = await helper.notesInDb()
     expect(blogsAfter).toHaveLength(helper.initialBlogs.length)
   })
+
+  test('deleting a blog', async () => {
+    const blogsBefore = await helper.notesInDb()
+    const blogToDelete = blogsBefore[0]
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+
+    const blogsAfter = await helper.notesInDb()
+    expect(blogsAfter).toHaveLength(helper.initialBlogs.length - 1)
+    expect(blogsAfter.map(blog => blog.title)).not.toContain(blogToDelete.title)
+  })
+
+  test('deleting invalid blog', async () => {
+    const invalidId = await helper.nonExistingId()
+    await api.delete(`/api/blogs/${invalidId}`).expect(400)
+  })
 })
 
 afterAll(async () => {

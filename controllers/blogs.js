@@ -40,11 +40,15 @@ blogsRouter.post('/', (request, response, next) => {
     }).catch(error => next(error))
 })
 
-blogsRouter.delete('/:id', (request, response, next) => {
-  Blog.findByIdAndDelete(request.params.id)
-    .then(result => {
-      response.status(204).end()
-    }).catch(error => next(error))
+blogsRouter.delete('/:id', async (request, response) => {
+  const blog = await Blog.findById(request.params.id)
+
+  if (!blog) {
+    return response.status(400).send('Blog not found with given ID')
+  }
+
+  await Blog.findByIdAndDelete(request.params.id)
+  response.status(204).end()
 })
 
 blogsRouter.put('/:id', (request, response, next) => {
