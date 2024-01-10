@@ -11,11 +11,18 @@ beforeEach(async () => {
   await Blog.insertMany(helper.initialBlogs)
 })
 
-test('blogs are returned as json', async () => {
-  const response = await api.get('/api/blogs')
-  expect(response.status).toBe(200)
-  expect(response.headers['content-type']).toContain('application/json')
-  expect(response.body).toHaveLength(helper.initialBlogs.length)
+describe('working with initial blogs', () => {
+  test('blogs are returned as json', async () => {
+    const response = await api.get('/api/blogs')
+    expect(response.status).toBe(200)
+    expect(response.headers['content-type']).toContain('application/json')
+    expect(response.body).toHaveLength(helper.initialBlogs.length)
+  })
+
+  test('blogs have id field', async () => {
+    const response = await api.get('/api/blogs')
+    expect(response.body[0].id).toBeDefined()
+  })
 })
 
 afterAll(async () => {
