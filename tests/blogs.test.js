@@ -87,6 +87,32 @@ describe('working with initial blogs', () => {
     const invalidId = await helper.nonExistingId()
     await api.delete(`/api/blogs/${invalidId}`).expect(400)
   })
+
+  test('updating a blog', async () => {
+    const blogsBefore = await helper.notesInDb()
+    const blogToUpdate = blogsBefore[0]
+
+    const updatedBlog = {
+      title: blogToUpdate.title,
+      author: blogToUpdate.author,
+      url: blogToUpdate.url,
+      likes: blogToUpdate.likes + 1
+    }
+
+    await api.put(`/api/blogs/${blogToUpdate.id}`)
+      .send(updatedBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAfter = await helper.notesInDb()
+    expect(blogsAfter).toHaveLength(helper.initialBlogs.length)
+    expect(blogsAfter.find(blog => blog.id === blogToUpdate.id).likes).toBe(blogToUpdate.likes + 1)
+  })
+
+  test('updating invalid blog', async () => {
+    const invalidId = await helper.nonExistingId()
+    await api.put(`/api/blogs/${invalidId}`).expect(404)
+  })
 })
 
 afterAll(async () => {
