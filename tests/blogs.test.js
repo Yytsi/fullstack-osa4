@@ -41,6 +41,24 @@ describe('working with initial blogs', () => {
     expect(blogsAfter).toHaveLength(helper.initialBlogs.length + 1)
     expect(blogsAfter.map(blog => blog.title)).toContain('UusiBlogi')
   })
+
+  test('adding a blog without likes field', async () => {
+    const newBlog = {
+      title: 'AgainUusiBlogi',
+      author: 'New blogger once again',
+      url: 'https://www.kuusi.com/uudempi-blogi',
+    }
+
+    await api.post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAfter = await helper.notesInDb()
+    expect(blogsAfter).toHaveLength(helper.initialBlogs.length + 1)
+    expect(blogsAfter.map(blog => blog.title)).toContain('AgainUusiBlogi')
+    expect(blogsAfter.find(blog => blog.title === 'AgainUusiBlogi').likes).toBe(0)
+  })
 })
 
 afterAll(async () => {
