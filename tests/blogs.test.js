@@ -59,6 +59,19 @@ describe('working with initial blogs', () => {
     expect(blogsAfter.map(blog => blog.title)).toContain('AgainUusiBlogi')
     expect(blogsAfter.find(blog => blog.title === 'AgainUusiBlogi').likes).toBe(0)
   })
+
+  test('adding a blog without title and url fields', async () => {
+    const newBlog = {
+      author: 'Yet New blogger once again'
+    }
+
+    await api.post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+
+    const blogsAfter = await helper.notesInDb()
+    expect(blogsAfter).toHaveLength(helper.initialBlogs.length)
+  })
 })
 
 afterAll(async () => {

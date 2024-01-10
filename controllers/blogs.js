@@ -25,6 +25,10 @@ blogsRouter.get('/:id', (request, response, next) => {
 blogsRouter.post('/', (request, response, next) => {
   const blog = new Blog(request.body)
 
+  if (!blog.title || !blog.url) {
+    return response.status(400).end()
+  }
+
   if (!blog.likes) {
     blog.likes = 0
   }
