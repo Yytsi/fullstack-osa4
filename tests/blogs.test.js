@@ -23,6 +23,24 @@ describe('working with initial blogs', () => {
     const response = await api.get('/api/blogs')
     expect(response.body[0].id).toBeDefined()
   })
+
+  test('adding a blog', async () => {
+    const newBlog = {
+      title: 'UusiBlogi',
+      author: 'Uusi kirjoittaja',
+      url: 'https://www.kuusi.com/kuusi-blogi',
+      likes: 11
+    }
+
+    await api.post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAfter = await helper.notesInDb()
+    expect(blogsAfter).toHaveLength(helper.initialBlogs.length + 1)
+    expect(blogsAfter.map(blog => blog.title)).toContain('UusiBlogi')
+  })
 })
 
 afterAll(async () => {
