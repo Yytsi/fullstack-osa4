@@ -7,6 +7,11 @@ usersRouter.get('/', async (request, response) => {
   response.json(users)
 })
 
+usersRouter.get('/:id', async (request, response) => {
+  const user = await User.findById(request.params.id).populate('blogs', { title: 1, author: 1, url: 1, likes: 1 })
+  response.json(user)
+})
+
 usersRouter.post('/', async (request, response, next) => {
   const body = request.body
 
@@ -26,5 +31,7 @@ usersRouter.post('/', async (request, response, next) => {
   const savedUser = await newUser.save()
   response.json(savedUser)
 })
+
+
 
 module.exports = usersRouter
