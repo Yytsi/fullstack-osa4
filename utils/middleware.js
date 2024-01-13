@@ -19,8 +19,6 @@ const errorHandler = (error, request, response, next) => {
     return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError') {
     return response.status(400).json({ error: error.message })
-  } else if (error.name === 'IncorrectUserGeneration') {
-    return response.status(400).json({ error: 'incorrect user generation' })
   } else if (error.code === 11000) {
     return response.status(400).json({ error: 'duplicate user' })
   }
