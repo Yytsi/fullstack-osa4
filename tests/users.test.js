@@ -52,6 +52,18 @@ describe('working with initial users', () => {
     const usersAfter = await helper.usersInDb()
     expect(usersAfter).toHaveLength(helper.initialUsers.length)
   })
+
+  test('duplicate username is not added', async () => {
+    const firstUser = helper.initialUsers[0]
+
+    await api.post('/api/users')
+      .send(firstUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    const usersAfter = await helper.usersInDb()
+    expect(usersAfter).toHaveLength(helper.initialUsers.length)
+  })
 })
 
 afterAll(async () => {
