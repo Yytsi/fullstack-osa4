@@ -57,6 +57,8 @@ blogsRouter.post('/', async (request, response, next) => {
 
   if (user) {
     blog.user = user._id
+    user.blogs = user.blogs.concat(blog._id)
+    await user.save()
   } else {
     return response.status(400).send({ error: 'User not found with given ID' })
   }
@@ -78,7 +80,7 @@ blogsRouter.delete('/:id', async (request, response) => {
   }
 
   await Blog.findByIdAndDelete(request.params.id)
-  response.status(204).end()
+  response.status(204).json({ message: 'Blog deleted successfully' })
 })
 
 blogsRouter.put('/:id', async (request, response) => {
