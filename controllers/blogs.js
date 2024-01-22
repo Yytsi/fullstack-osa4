@@ -1,6 +1,7 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog.js')
 const User = require('../models/user.js')
+const middleware = require('../utils/middleware.js')
 const jwt = require('jsonwebtoken')
 
 blogsRouter.get('/', (request, response) => {
@@ -26,15 +27,9 @@ blogsRouter.get('/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
-blogsRouter.post('/', async (request, response, next) => {
+blogsRouter.post('/', middleware.userExtractor, async (request, response, next) => {
   const token = request.token
 
-  const decodedToken = jwt.verify(token, process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: 'token missing or invalid' })
-  }
-
-  const user = await User.findById(decodedToken.id)
   const blog = new Blog(request.body)
 
   if (!blog.title || !blog.url) {
@@ -45,10 +40,10 @@ blogsRouter.post('/', async (request, response, next) => {
     blog.likes = 0
   }
 
-  if (user) {
-    blog.user = user._id
-    user.blogs = user.blogs.concat(blog._id)
-    await user.save()
+  if (request.user) {
+    blog.user = request.user._id
+    request.user.blogs = request.user.blogs.concat(blog._id)
+    await request.user.save()
   } else {
     return response.status(400).send({ error: 'User not found with given ID' })
   }
@@ -62,21 +57,14 @@ blogsRouter.post('/', async (request, response, next) => {
   response.status(201).json(savedBlog)
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
+blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
   const blog = await Blog.findById(request.params.id)
 
   if (!blog) {
     return response.status(400).send('Blog not found with given ID')
   }
 
-  const token = request.token
-  const decodedToken = jwt.verify(token, process.env.SECRET)
-
-  if (!token || !decodedToken.id) {
-    return response.status(401).send({ error: 'token missing or invalid' })
-  }
-
-  if (blog.user.toString() !== decodedToken.id.toString()) {
+  if (blog.user.toString() !== request.user.id.toString()) {
     return response.status(401).send({ error: 'lack of authorization to delete this blog' })
   }
 
