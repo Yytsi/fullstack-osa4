@@ -1,8 +1,6 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog.js')
-const User = require('../models/user.js')
 const middleware = require('../utils/middleware.js')
-const jwt = require('jsonwebtoken')
 
 blogsRouter.get('/', (request, response) => {
   Blog
@@ -27,10 +25,12 @@ blogsRouter.get('/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
-blogsRouter.post('/', middleware.userExtractor, async (request, response, next) => {
-  const token = request.token
-
+blogsRouter.post('/', middleware.tokenExtractor, middleware.userExtractor, async (request, response, next) => {
   const blog = new Blog(request.body)
+
+  console.log('request.body', request.body)
+  console.log('request.user', request.user)
+  console.log('blog', blog)
 
   if (!blog.title || !blog.url) {
     return response.status(400).end()
@@ -57,7 +57,7 @@ blogsRouter.post('/', middleware.userExtractor, async (request, response, next) 
   response.status(201).json(savedBlog)
 })
 
-blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
+blogsRouter.delete('/:id', middleware.tokenExtractor, middleware.userExtractor, async (request, response) => {
   const blog = await Blog.findById(request.params.id)
 
   if (!blog) {
@@ -72,14 +72,35 @@ blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) =
   response.status(204).json({ message: 'Blog deleted successfully' })
 })
 
-blogsRouter.put('/:id', async (request, response) => {
+blogsRouter.put('/:id', middleware.tokenExtractor, middleware.userExtractor, async (request, response) => {
   const body = request.body
 
   const blogUpdate = {
     title: body.title,
     author: body.author,
-    url: body.url,
-    likes: body.likes
+    url: body.url
+  }
+
+  const blog = await Blog.findById(request.params.id)
+  if (!blog) {
+    return response.status(404).send({ error: 'Blog not found with given ID' })
+  }
+
+  if (!blogUpdate.title || !blogUpdate.url) {
+    return response.status(400).end()
+  }
+
+  if (!body.likes) {
+    blogUpdate.likes = 0
+  } else {
+    blogUpdate.likes = body.likes
+  }
+
+  console.log('blog.user', blog.user)
+  console.log('request.user.id', request.user.id)
+
+  if (blog.user.toString() !== request.user.id.toString()) {
+    return response.status(401).send({ error: 'lack of authorization to update this blog' })
   }
 
   const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blogUpdate, { new: true, runValidators: true, context: 'query' })

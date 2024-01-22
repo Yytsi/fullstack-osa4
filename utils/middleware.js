@@ -17,6 +17,9 @@ const unknownEndpoint = (request, response) => {
 const tokenExtractor = (request, response, next) => {
   const authorization = request.get('authorization')
   request.token = authorization && authorization.toLowerCase().startsWith('bearer ') ? authorization.substring(7) : null
+  if (!request.token) {
+    return response.status(401).json({ error: 'token missing or invalid' })
+  }
   next()
 }
 

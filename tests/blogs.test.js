@@ -18,15 +18,21 @@ beforeEach(async () => {
     name: 'Testing Thisuser',
     password: 'testpassword123'
   }
-  await api.post('/api/users').send(newUser)
+  const usr = await api.post('/api/users').send(newUser)
+  console.log('before usr', usr.body)
+
+  // print users
+  const users = await User.find({})
+  console.log('before users', users)
 
   const response = await api.post('/api/login').send(newUser)
   token = response.body.token
+  console.log('before token', token)
 
   await Blog.deleteMany({})
 
   initBlogs = helper.initialBlogs.map(blog => {
-    blog.user = response.body.id
+    blog.user = users[0].id
     return blog
   })
 
@@ -101,6 +107,8 @@ describe('working with initial blogs', () => {
   test('deleting a blog', async () => {
     const blogsBefore = await helper.notesInDb()
     const blogToDelete = blogsBefore[0]
+    console.log('blogToDelete', blogToDelete)
+    console.log('token', token)
     await api.delete(`/api/blogs/${blogToDelete.id}`)
       .set('Authorization', `bearer ${token}`).expect(204)
 
@@ -111,7 +119,9 @@ describe('working with initial blogs', () => {
 
   test('deleting invalid blog', async () => {
     const invalidId = await helper.nonExistingId()
-    await api.delete(`/api/blogs/${invalidId}`).expect(400)
+    await api.delete(`/api/blogs/${invalidId}`)
+      .set('Authorization', `bearer ${token}`)
+      .expect(400)
   })
 
   test('updating a blog', async () => {
@@ -138,7 +148,9 @@ describe('working with initial blogs', () => {
 
   test('updating invalid blog', async () => {
     const invalidId = await helper.nonExistingId()
-    await api.put(`/api/blogs/${invalidId}`).expect(404)
+    await api.put(`/api/blogs/${invalidId}`)
+      .set('Authorization', `bearer ${token}`)
+      .expect(404)
   })
 })
 
